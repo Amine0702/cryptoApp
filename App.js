@@ -1,20 +1,24 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import HomeScreen from './screens/HomeScreen';
+import ModeSelectionScreen from './screens/ModeSelectionScreen';
+import CipherScreen from './screens/CipherScreen';
+import KeyGenerationScreen from './screens/KeyGenerationScreen';
+import TrainingModeScreen from './screens/TrainingModeScreen';
+
+const Stack = createStackNavigator();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="ModeSelection" component={ModeSelectionScreen} />
+        <Stack.Screen name="Cipher" component={CipherScreen} />
+        <Stack.Screen name="KeyGeneration" component={KeyGenerationScreen} />
+        <Stack.Screen name="TrainingMode" component={TrainingModeScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
