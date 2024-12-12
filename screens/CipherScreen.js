@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TextInput, ImageBackground, ScrollView } from 'react-native';
 import { Button, Text, Card, RadioButton } from 'react-native-paper';
-import LottieView from 'lottie-react-native'; // Importer Lottie pour l'animation
+import LottieView from 'lottie-react-native';
 import {
   cesarEncrypt,
   cesarDecrypt,
@@ -9,7 +9,14 @@ import {
   affineDecrypt,
   vigenereEncrypt,
   vigenereDecrypt,
+  hashText,
+  generateRSAKeys,
+  rsaEncrypt,
+  rsaDecrypt,
 } from '../utils/cryptoUtils';
+
+
+
 
 export default function CipherScreen({ route }) {
   const { method } = route.params;
@@ -18,25 +25,57 @@ export default function CipherScreen({ route }) {
   const [result, setResult] = useState('');
   const [key1, setKey1] = useState('');
   const [key2, setKey2] = useState('');
-  const [loading, setLoading] = useState(false); // Ajouter un état pour la gestion du chargement
+  const [loading, setLoading] = useState(false);
+  const [rsaKeys, setRsaKeys] = useState({ publicKey: '', privateKey: '' });
+  const [password, setPassword] = useState('');
 
   const handleCipher = () => {
-    setLoading(true); // Début de l'animation de chargement
+    setLoading(true);
     let output = '';
-    setTimeout(() => { // Simuler un délai de chiffrement
-      if (method === 'César') {
-        const shift = parseInt(key1);
-        output = action === 'encrypt' ? cesarEncrypt(text, shift) : cesarDecrypt(text, shift);
-      } else if (method === 'Affine') {
-        const a = parseInt(key1);
-        const b = parseInt(key2);
-        output = action === 'encrypt' ? affineEncrypt(text, a, b) : affineDecrypt(text, a, b);
-      } else if (method === 'Vigenère') {
-        output = action === 'encrypt' ? vigenereEncrypt(text, key1) : vigenereDecrypt(text, key1);
+    setTimeout(() => {
+      try {
+        switch (method) {
+          case 'César':
+            const shift = parseInt(key1);
+            output = action === 'encrypt' ? cesarEncrypt(text, shift) : cesarDecrypt(text, shift);
+            break;
+          case 'Affine':
+            const a = parseInt(key1);
+            const b = parseInt(key2);
+            output = action === 'encrypt' ? affineEncrypt(text, a, b) : affineDecrypt(text, a, b);
+            break;
+          case 'Vigenère':
+            output = action === 'encrypt' ? vigenereEncrypt(text, key1) : vigenereDecrypt(text, key1);
+            break;
+          case 'RSA':
+            if (action === 'encrypt') {
+              output = rsaEncrypt(text, rsaKeys.publicKey);
+            } else if (action === 'decrypt') {
+              if (password === '123456') {
+                output = rsaDecrypt(text, rsaKeys.privateKey);
+              } else {
+                output = 'Mot de passe incorrect';
+              }
+            }
+            break;
+          case 'Hash':
+            output = hashText(text);
+            break;
+          default:
+            output = 'Méthode inconnue';
+            break;
+        }
+      } catch (error) {
+        output = `Erreur : ${error.message}`;
       }
       setResult(output);
-      setLoading(false); // Fin du chargement
-    }, 1500); // Le délai de traitement est simulé ici à 1.5 secondes
+      setLoading(false);
+    }, 1500);
+  };
+
+  const handleGenerateKeys = () => {
+    const keys = generateRSAKeys();
+    setRsaKeys(keys);
   };
 
   return (
@@ -45,38 +84,93 @@ export default function CipherScreen({ route }) {
         <Text style={styles.title}>Méthode : {method}</Text>
         <Card style={styles.card}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, styles.inputWithPlaceholder]}
             placeholder="Entrez votre texte"
-            placeholderTextColor="#ccc"
             value={text}
             onChangeText={setText}
             multiline
             numberOfLines={4}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Clé principale"
-            placeholderTextColor="#ccc"
-            value={key1}
-            onChangeText={setKey1}
-            keyboardType={method === 'Vigenère' ? 'default' : 'numeric'}
-          />
-          {method === 'Affine' && (
+
+          {/* Méthode RSA */}
+          {method === 'RSA' && (
+            <View>
+              <TextInput
+                style={[styles.input, styles.inputWithPlaceholder]}
+                placeholder="Clé publique (générée automatiquement)"
+                value={rsaKeys.publicKey}
+                editable={false}
+              />
+              <TextInput
+                style={[styles.input, styles.inputWithPlaceholder]}
+                placeholder="Clé privée (générée automatiquement)"
+                value={rsaKeys.privateKey.replace(/./g, '*')} // Affiche les étoiles
+                editable={false}
+              />
+              {action === 'decrypt' && (
+                <TextInput
+                  style={[styles.input, styles.inputWithPlaceholder]}
+                  placeholder="Entrez le mot de passe"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+              )}
+              <Button
+                mode="contained"
+                onPress={handleGenerateKeys}
+                style={styles.generateButton}
+                labelStyle={styles.buttonText}
+              >
+                Générer les clés RSA
+              </Button>
+            </View>
+          )}
+
+          {/* Méthode César */}
+          {method === 'César' && (
             <TextInput
-              style={styles.input}
-              placeholder="Clé secondaire"
-              placeholderTextColor="#ccc"
-              value={key2}
-              onChangeText={setKey2}
+              style={[styles.input, styles.inputWithPlaceholder]}
+              placeholder="Clé César : Entrez un nombre entier (décalage)"
+              value={key1}
+              onChangeText={setKey1}
               keyboardType="numeric"
             />
           )}
+
+          {/* Méthode Affine */}
+          {method === 'Affine' && (
+            <View>
+              <TextInput
+                style={[styles.input, styles.inputWithPlaceholder]}
+                placeholder="Clé 'a' (coprime avec 26)"
+                value={key1}
+                onChangeText={setKey1}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={[styles.input, styles.inputWithPlaceholder]}
+                placeholder="Clé 'b'"
+                value={key2}
+                onChangeText={setKey2}
+                keyboardType="numeric"
+              />
+            </View>
+          )}
+
+          {/* Méthode Vigenère */}
+          {method === 'Vigenère' && (
+            <TextInput
+              style={[styles.input, styles.inputWithPlaceholder]}
+              placeholder="Clé Vigenère : Entrez une chaîne de texte"
+              value={key1}
+              onChangeText={setKey1}
+            />
+          )}
+
           <View style={styles.radioContainer}>
             <Text style={styles.radioLabel}>Choisir l'action :</Text>
-            <RadioButton.Group
-              onValueChange={value => setAction(value)}
-              value={action}
-            >
+            <RadioButton.Group onValueChange={setAction} value={action}>
               <View style={styles.radioOption}>
                 <RadioButton value="encrypt" />
                 <Text style={styles.radioText}>Crypter</Text>
@@ -87,29 +181,22 @@ export default function CipherScreen({ route }) {
               </View>
             </RadioButton.Group>
           </View>
-          <Button
-            mode="contained"
-            onPress={handleCipher}
-            style={styles.runButton}
-            labelStyle={styles.buttonText}
-          >
+
+          <Button mode="contained" onPress={handleCipher} style={styles.runButton} labelStyle={styles.buttonText}>
             Exécuter
           </Button>
         </Card>
-        
-        {/* Afficher l'animation de chargement */}
-        {loading && (
-          <LottieView
-            source={require('../assets/loader.json')} // Tu dois ajouter un fichier .json d'animation
-            autoPlay
-            loop
-            style={styles.loader}
-          />
-        )}
+
+        {loading && <LottieView source={require('../assets/loader.json')} autoPlay loop style={styles.loader} />}
 
         {result && (
           <Card style={styles.resultCard}>
-            <Text style={styles.resultText}>{result}</Text>
+            <TextInput
+              style={styles.resultTextInput}
+              value={result}
+              editable={false}
+              multiline
+            />
           </Card>
         )}
       </ScrollView>
@@ -117,11 +204,14 @@ export default function CipherScreen({ route }) {
   );
 }
 
+
+
+
 const styles = StyleSheet.create({
   background: { flex: 1, resizeMode: 'cover' },
   overlay: {
     flexGrow: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Réduire l'opacité pour un meilleur contraste
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -138,7 +228,7 @@ const styles = StyleSheet.create({
     width: '100%',
     padding: 20,
     borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Ajuster l'arrière-plan pour plus de lisibilité
     marginBottom: 30,
   },
   input: {
@@ -150,7 +240,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 15,
     fontSize: 16,
-    color: '#fff',
+    color: '#fff', // Texte en blanc
+    backgroundColor: '#ffff', // Fond plus clair pour les champs de saisie
+  },
+  inputWithPlaceholder: {
+    color: '#000', // Texte en blanc
+    placeholderTextColor: '#000', // Placeholder en gris clair pour une meilleure visibilité
   },
   radioContainer: {
     marginBottom: 20,
@@ -174,6 +269,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#2ecc71',
     marginTop: 20,
   },
+  generateButton: {
+    backgroundColor: '#f39c12',
+    marginTop: 20,
+  },
   buttonText: {
     color: '#fff',
     fontSize: 16,
@@ -185,10 +284,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     marginTop: 20,
   },
-  resultText: {
+  resultTextInput: {
     color: '#fff',
     fontSize: 18,
     textAlign: 'center',
+    minHeight: 80,
+    paddingHorizontal: 10,
   },
   loader: {
     width: 100,
@@ -197,3 +298,4 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
 });
+

@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ImageBackground } from 'react-native';
 import { Button, Text, Card } from 'react-native-paper';
 
 export default function ModeSelectionScreen({ navigation }) {
+  
+
   return (
     <ImageBackground source={require('../assets/hacker-bg.jpg')} style={styles.background}>
       <View style={styles.overlay}>
         <Text style={styles.title}>Choisissez une méthode de cryptage</Text>
         <Card style={styles.card}>
-          {/* Boutons pour la méthode de cryptage */}
+          {/* Boutons pour les méthodes de cryptage existantes */}
           <Button
             mode="contained"
             onPress={() => navigation.navigate('Cipher', { method: 'César' })}
@@ -33,19 +35,37 @@ export default function ModeSelectionScreen({ navigation }) {
           >
             Chiffre Vigenère
           </Button>
-          
-          {/* Nouveaux boutons pour accéder aux autres pages */}
+
+          {/* Nouveaux boutons pour RSA, AES et Hachage */}
           <Button
             mode="contained"
-            onPress={() => navigation.navigate('KeyGeneration')}
+            onPress={() => navigation.navigate('Cipher', { method: 'RSA' })}
             style={styles.methodButton}
             labelStyle={styles.buttonText}
           >
-            Génération de clé
+            Cryptage RSA
           </Button>
           <Button
             mode="contained"
-            onPress={() => navigation.navigate('TrainingMode')}
+            onPress={() => navigation.navigate('AES')} // Naviguer vers la page AES
+            style={styles.methodButton}
+            labelStyle={styles.buttonText}
+          >
+            Cryptage AES
+          </Button>
+          <Button
+            mode="contained"
+            onPress={() => navigation.navigate('Cipher', { method: 'Hash' })}
+            style={styles.methodButton}
+            labelStyle={styles.buttonText}
+          >
+            Hachage SHA-256
+          </Button>
+          
+          {/* Bouton Mode Entraînement */}
+          <Button
+            mode="contained"
+            onPress={() => navigation.navigate('trainment')}
             style={styles.methodButton}
             labelStyle={styles.buttonText}
           >
@@ -81,4 +101,12 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   buttonText: { color: '#fff', fontSize: 18 },
+  resultCard: {
+    marginTop: 10,
+    padding: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    borderRadius: 10,
+    width: '100%',
+  },
+  resultText: { color: '#fff', fontSize: 16 },
 });

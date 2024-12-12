@@ -6,7 +6,7 @@ export default function HomeScreen({ navigation }) {
   return (
     <ImageBackground source={require('../assets/hacker-bg.jpg')} style={styles.background}>
       <View style={styles.overlay}>
-        <Text style={styles.title}>Bienvenue dans CryptoApp</Text>
+        <Text style={styles.title}>Bienvenue dans CryptageApp</Text>
         <Text style={styles.subtitle}>
           Cryptez et décryptez vos messages avec des algorithmes modernes et sécurisés.
         </Text>
