@@ -13,12 +13,6 @@ Mobile application for text encryption and decryption using multiple classical a
 - Interactive screens for testing and practicing encryption
 - Cross-platform (iOS & Android) using React Native
 
-## Folder Structure
-- `assets/` - icons, images, loader animations
-- `app/` - utility functions and encryption algorithms
-- `screens/` - UI screens and navigation
-- `App.js` - main entry point
-- `i18n.js` - localization support
 
 ## Technologies
 - React Native
